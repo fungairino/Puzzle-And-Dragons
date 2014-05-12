@@ -159,11 +159,23 @@ class Puzzler:
 						vmatches.append(newmatch)
 		return vmatches
 		
-	def maxcombos(self, depth):
+	def maxcombo(self, depth):
 		bcopy = self.board
+		checkedboards = [bcopy]
+		comboresults = []
 		for y in range(len(bcopy)):
 			for x in range(len(bcopy[0])):
-				print bcopy[y][x]
+				comboresults+comboseqsfromp(x, y, bcopy, checkedboards, depth, [])
+		maxcombo = [0,[],[]]
+		for c in comboresults:
+			if (c[0] > maxcombo[0] or 
+				c[0] == maxcombo[0] and len(c[2]) < maxcombo):
+				maxcombo = c					
+		return maxcombo
+	
+	def comboseqsfromp(x, y, board, checkedboards, depth, combos):
+		# returns a list of [number (#of combos], board, [(x,y), (x2,y), ...]]
+		pass		
 		
 	def __str__(self):
 		return str(self.board)
