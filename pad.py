@@ -1,6 +1,4 @@
-'''
-A couple of functions useful for PAD
-'''
+import copy
 
 class Puzzler:
 	'''
@@ -33,7 +31,7 @@ class Puzzler:
 					visited.append((x,y))
 					newgroup = [self[y][x],(x,y)]
 					tocheck = []
-					self.addnewneighbors(x,y,tocheck, visited)
+					self.addnewneighbors(x, y, tocheck, visited)
 					while tocheck:
 						e = tocheck.pop()
 						if self[e[1]][e[0]] == newgroup[0]:
@@ -53,8 +51,9 @@ class Puzzler:
 		if y<self.boardheight-1 and (x,y+1) not in visited:
 			tocheck.append((x,y+1))
 	
-	def allmatches(self, board):
+	def allmatches(self):
 		# accounts for falling subsequent matches
+		board = copy.deepcopy(self.board)
 		allmatches = []
 		matches = self.matches(board)
 		while matches:
@@ -160,22 +159,14 @@ class Puzzler:
 		return vmatches
 		
 	def maxcombo(self, depth):
-		bcopy = self.board
-		checkedboards = [bcopy]
-		comboresults = []
-		for y in range(len(bcopy)):
-			for x in range(len(bcopy[0])):
-				comboresults+comboseqsfromp(x, y, bcopy, checkedboards, depth, [])
-		maxcombo = [0,[],[]]
-		for c in comboresults:
-			if (c[0] > maxcombo[0] or 
-				c[0] == maxcombo[0] and len(c[2]) < maxcombo):
-				maxcombo = c					
-		return maxcombo
+		pass
 	
-	def comboseqsfromp(x, y, board, checkedboards, depth, combos):
-		# returns a list of [number (#of combos], board, [(x,y), (x2,y), ...]]
-		pass		
+	def swap(self, board, p1, p2):
+		newboard = copy.deepcopy(board)
+		tmp = newboard[p1[1]][p1[0]]
+		newboard[p1[1]][p1[0]] = newboard[p2[1]][p2[0]]
+		newboard[p2[1]][p2[0]] = tmp
+		return newboard
 		
 	def __str__(self):
 		return str(self.board)
@@ -186,20 +177,18 @@ class Puzzler:
 	def __setitem__(self, index, value):
 		self.board[index] = value
 
+
 if __name__ == "__main__":
 	board = open("board4.txt")
 	string = board.read()
 	print string
 	p = Puzzler(string)
-	boardcopy = p.board
 	print p
 	print "Number of groups: " + str(len(p.groups()))
 	print p.groups()
-	print "Number of horizontal matches: " + str(len(p.hmatches(boardcopy)))
-	print p.hmatches(boardcopy)
-	print "Number of vertical matches: " + str(len(p.vmatches(boardcopy)))
-	print p.vmatches(boardcopy)
-	allmatches = p.allmatches(boardcopy)
-	print "Number of total matches: " + str(len(allmatches))
-	print allmatches
-	p.maxcombos(1)
+	print "Number of initial horizontal matches: " + str(len(p.hmatches(p.board)))
+	print p.hmatches(p.board)
+	print "Number of initial vertical matches: " + str(len(p.vmatches(p.board)))
+	print p.vmatches(p.board)
+	print "Number of total matches: " + str(len(p.allmatches()))
+	print p.allmatches()
