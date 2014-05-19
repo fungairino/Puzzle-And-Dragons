@@ -197,6 +197,35 @@ class Puzzler:
 				result += self.comboseqsfromp(p[0], p[1], newboard, depth-1, newsequence, [(x,y)])
 		return result
 	
+	def maxcombo_v2(self, depth):
+		board = copy.deepcopy(self.board)
+		results = []
+		for y in range(self.boardheight):
+			for x in range(self.boardwidth):
+				results += self.comboseqsfromp_v2(x, y, board, depth, [(x,y)], None)
+		maxc = [0,[],[]]
+		for c in results:
+			if (c[0] > maxc[0] or
+				c[0] == maxc[0] and len(c[2]) < len(maxc[2])):
+				maxc = c
+		return maxc
+	
+	def comboseqsfromp_v2(self, x, y, board, depth, sequence, previous):
+		matches = self.allmatches(board)
+		result = [[len(matches), matches, sequence]]
+		if depth > 0:
+			neighbors = []
+			self.addnewneighbors(x, y, neighbors, [previous])
+			for p in neighbors:
+				newboard = self.swap(board, (x,y), p)
+				newsequence = sequence[:]
+				newsequence.append(p)
+				nextresult = self.comboseqsfromp_v2(p[0], p[1], newboard, depth-1, newsequence, [(x,y)])
+				if (nextresult[0] > result[0] or
+					nextresult[0] == result[0] and len(nextresult[2]) < len(result[2])):
+					result = nextresult
+		return result
+	
 	def swap(self, board, p1, p2):
 		#swaps p1 and p2 and returns a new board
 		newboard = copy.deepcopy(board)
