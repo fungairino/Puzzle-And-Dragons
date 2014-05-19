@@ -1,4 +1,5 @@
 import copy
+from timeit import Timer
 
 class Puzzler:
 	'''
@@ -42,6 +43,7 @@ class Puzzler:
 		return groups
 	
 	def addnewneighbors(self, x, y, tocheck, visited):
+		# adds adjacent points from (x,y) to tocheck if not in visited
 		if x>0 and (x-1,y) not in visited:
 			tocheck.append((x-1,y))
 		if x<self.boardwidth-1 and (x+1,y) not in visited:
@@ -51,9 +53,9 @@ class Puzzler:
 		if y<self.boardheight-1 and (x,y+1) not in visited:
 			tocheck.append((x,y+1))
 	
-	def allmatches(self):
-		# accounts for falling subsequent matches
-		board = copy.deepcopy(self.board)
+	def allmatches(self, b):
+		# finds all the matches and accounts for falling subsequent matches in b (board)
+		board = copy.deepcopy(b)
 		allmatches = []
 		matches = self.matches(board)
 		while matches:
@@ -63,7 +65,7 @@ class Puzzler:
 		return allmatches
 	
 	def clearmatches(self, board):
-		#remove matches
+		#remove matches from board
 		for m in self.matches(board):
 			for p in m[1:]:
 				board[p[1]][p[0]] = False
@@ -78,6 +80,11 @@ class Puzzler:
 					board[tmp][x] = False
 	
 	def matches(self, board):
+		'''
+		finds all the matches on the given board. A match is a group of pieces where 
+		each piece belongs to at least one vertical match or horizontal match.
+		A match is a [X, p1, p2, ...] where X is the piece and p is a (x,y) pos
+		'''
 		hmatches = self.hmatches(board)
 		vmatches = self.vmatches(board)
 		visited = []
@@ -98,6 +105,7 @@ class Puzzler:
 		return matches
 		
 	def addneighbormatches(self, match, tocheck, visited, hmatches, vmatches):
+		# adds neighbouring matches from match to tocheck if not in visited
 		added = []
 		for p in match[1:]:
 			for m in hmatches+vmatches:
@@ -106,7 +114,10 @@ class Puzzler:
 					added.append(m)
 					
 	def connected(self, p, m):
-		# p is a point (i,j), and m is a match [X,p1,p2 ...]
+		''' 
+		p is a point (i,j), and m is a match [X,p1,p2 ...]
+		checks if p is in or next to m
+		'''
 		result = False
 		for n in m[1:]:
 			if (p[0] == n[0] and p[1] == n[1] or
@@ -125,6 +136,7 @@ class Puzzler:
 				match1.append(p)
 	
 	def hmatches(self, board):
+		# finds all horizontal groups with at least 3 consecutive same pieces
 		visited = []
 		hmatches = []
 		for y in range(self.boardheight):
@@ -142,6 +154,7 @@ class Puzzler:
 		return hmatches
 	
 	def vmatches(self, board):
+		# finds all vertical groups with at least 3 consecutive same pieces
 		visited = []
 		vmatches = []
 		for y in range(self.boardheight):
@@ -159,9 +172,33 @@ class Puzzler:
 		return vmatches
 		
 	def maxcombo(self, depth):
-		pass
+		board = copy.deepcopy(self.board)
+		results = []
+		for y in range(self.boardheight):
+			for x in range(self.boardwidth):
+				results += self.comboseqsfromp(x, y, board, depth, [(x,y)], None)
+		maxc = [0,[],[]]
+		for c in results:
+			if (c[0] > maxc[0] or
+				c[0] == maxc[0] and len(c[2]) < len(maxc[2])):
+				maxc = c
+		return maxc
+	
+	def comboseqsfromp(self, x, y, board, depth, sequence, previous):
+		matches = self.allmatches(board)
+		result = [[len(matches), matches, sequence]]
+		if depth > 0:
+			neighbors = []
+			self.addnewneighbors(x, y, neighbors, [previous])
+			for p in neighbors:
+				newboard = self.swap(board, (x,y), p)
+				newsequence = sequence[:]
+				newsequence.append(p)
+				result += self.comboseqsfromp(p[0], p[1], newboard, depth-1, newsequence, [(x,y)])
+		return result
 	
 	def swap(self, board, p1, p2):
+		#swaps p1 and p2 and returns a new board
 		newboard = copy.deepcopy(board)
 		tmp = newboard[p1[1]][p1[0]]
 		newboard[p1[1]][p1[0]] = newboard[p2[1]][p2[0]]
@@ -179,7 +216,7 @@ class Puzzler:
 
 
 if __name__ == "__main__":
-	board = open("board4.txt")
+	board = open("board5.txt")
 	string = board.read()
 	print string
 	p = Puzzler(string)
@@ -190,5 +227,7 @@ if __name__ == "__main__":
 	print p.hmatches(p.board)
 	print "Number of initial vertical matches: " + str(len(p.vmatches(p.board)))
 	print p.vmatches(p.board)
-	print "Number of total matches: " + str(len(p.allmatches()))
-	print p.allmatches()
+	print "Number of total matches: " + str(len(p.allmatches(p.board)))
+	print p.allmatches(p.board)
+	maxcombo = Puzzler(string).maxcombo(9)
+	print maxcombo
